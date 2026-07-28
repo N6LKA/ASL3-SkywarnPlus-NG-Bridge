@@ -93,6 +93,11 @@ ALERTS_HTML = """\
         var details='Temperature: '+w.temp_f+'&deg;F';
         if(w.feels_like_f!=null && w.feels_like_f!=w.temp_f) details+=' (feels like '+w.feels_like_f+'&deg;F)';
         if(w.humidity!=null) details+=' &nbsp;|&nbsp; Humidity: '+w.humidity+'%';
+        if(w.wind_mph!=null){
+          var wind=(w.wind_dir?w.wind_dir+' ':'')+w.wind_mph+' mph';
+          if(w.wind_gust_mph) wind+=' (gust '+w.wind_gust_mph+' mph)';
+          details+=' &nbsp;|&nbsp; Wind: '+wind;
+        }
         if(w.condition) details+=' &nbsp;|&nbsp; '+w.condition;
         h+='<div class="swp-wx">'+
            '<div class="swp-wx-title">'+title+'</div>'+
@@ -167,11 +172,12 @@ def load_weather_snapshot(path, max_age_min):
     """Read the current-conditions JSON another program (e.g. asl3-herald)
     is expected to maintain. Expected shape:
         {"weather": {"temp_f": ..., "condition": ..., "feels_like_f": ...,
-                     "humidity": ...},
+                     "humidity": ..., "wind_mph": ..., "wind_dir": ...,
+                     "wind_gust_mph": ...},
          "weather_label": "..."}
-    Matches asl3-herald's own internal weather-provider normalization (no
-    wind/pressure tracked). Returns None if missing, unreadable, or older
-    than max_age_min."""
+    Matches asl3-herald's own weather-provider normalization (Tempest,
+    Open-Meteo, METAR). Returns None if missing, unreadable, or older than
+    max_age_min."""
     if not path or not os.path.isfile(path):
         return None
     try:
