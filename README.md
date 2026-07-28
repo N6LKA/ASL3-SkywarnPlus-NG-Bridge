@@ -76,13 +76,16 @@ If `Weather.Enable: true`, the script reads a JSON file (default `/tmp/asl3-hera
     "temp_f": 82,
     "condition": "Partly Cloudy",
     "feels_like_f": 85,
-    "humidity": 55
+    "humidity": 55,
+    "wind_mph": 8,
+    "wind_dir": "SW",
+    "wind_gust_mph": 14
   },
   "weather_label": "My Station"
 }
 ```
 
-Deliberately just these four fields — matches what asl3-herald's own weather providers (Tempest, Open-Meteo, METAR) normalize down to internally for its own announcements, so it can write this snapshot straight from data it's already fetching, no wind/pressure/etc. tracked separately. `feels_like_f`/`condition` may be `null`. Anything writing this file just needs to produce this shape.
+Matches asl3-herald's own weather-provider normalization (Tempest, Open-Meteo, METAR all return this shape), so it can write this snapshot straight from data it's already fetching for its own announcements. `feels_like_f`/`condition`/`wind_dir`/`wind_gust_mph` may be `null` (e.g. METAR reports don't include `feels_like_f`). Anything writing this file just needs to produce this shape.
 
 ## File locations
 
