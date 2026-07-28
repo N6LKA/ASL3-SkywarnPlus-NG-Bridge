@@ -37,7 +37,36 @@ if [[ -f "${CONFIG_FILE}" ]]; then
     echo "    Existing config found at ${CONFIG_FILE}, leaving it untouched."
 else
     curl -fsSL "${REPO_RAW}/config.yaml.example" -o "${CONFIG_FILE}"
-    echo "    Wrote default config to ${CONFIG_FILE} — edit this before the bridge does anything useful."
+
+    ALLMON3_ENABLE="false"
+    SUPERMON_ENABLE="false"
+    if [[ -r /dev/tty ]]; then
+        read -r -p "    Enable Allmon3 integration? [y/N]: " ans < /dev/tty || true
+        [[ "${ans,,}" == "y" || "${ans,,}" == "yes" ]] && ALLMON3_ENABLE="true"
+        read -r -p "    Enable Supermon integration? [y/N]: " ans < /dev/tty || true
+        [[ "${ans,,}" == "y" || "${ans,,}" == "yes" ]] && SUPERMON_ENABLE="true"
+    else
+        echo "    No TTY available to prompt — leaving Allmon3/Supermon disabled (enable them in ${CONFIG_FILE} manually)."
+    fi
+
+    python3 - "${CONFIG_FILE}" "${ALLMON3_ENABLE}" "${SUPERMON_ENABLE}" <<'PYEOF'
+import sys
+from ruamel.yaml import YAML
+
+path, allmon3_enable, supermon_enable = sys.argv[1], sys.argv[2], sys.argv[3]
+yaml = YAML()
+yaml.preserve_quotes = True
+with open(path) as f:
+    cfg = yaml.load(f)
+
+cfg.setdefault("Allmon3", {})["Enable"] = (allmon3_enable == "true")
+cfg.setdefault("Supermon", {})["Enable"] = (supermon_enable == "true")
+
+with open(path, "w") as f:
+    yaml.dump(cfg, f)
+PYEOF
+
+    echo "    Wrote config to ${CONFIG_FILE} (Allmon3.Enable=${ALLMON3_ENABLE}, Supermon.Enable=${SUPERMON_ENABLE})"
 fi
 
 echo "==> Installing cron job (runs every minute)"
@@ -48,8 +77,8 @@ chmod 644 "${CRON_FILE}"
 
 echo ""
 echo "==> Done."
-echo "    1. Edit ${CONFIG_FILE} — set Allmon3.Enable and/or Supermon.Enable to true,"
-echo "       and adjust WebRoot/Paths/Weather settings for your system."
+echo "    1. Review ${CONFIG_FILE} — adjust WebRoot/Paths/Weather settings for your system"
+echo "       (Allmon3.Enable/Supermon.Enable were set from your answers above, if this is a fresh install)."
 echo "    2. Confirm SkywarnPlus-NG is installed and running (systemctl status skywarnplus-ng)."
 echo "    3. The cron job runs every minute once enabled — no service to start."
 echo "    4. Test a run manually: sudo ${BIN_PATH}"
