@@ -44,7 +44,23 @@ Add `--purge` to also remove the config directory. Output files already written 
 
 ## Allmon3 setup
 
-This script only writes `swp-data.json` and `swp-alerts.html` into your Allmon3 web root — it does not touch `allmon3.ini`. Point Allmon3's `menu.ini`/iframe config at `swp-alerts.html` yourself, the same way you would for any other custom panel page.
+This script writes the two files Allmon3's iframe actually loads — `swp-data.json` and `swp-alerts.html` — into your Allmon3 web root. It never touches `allmon3.ini` or any other Allmon3 config; you point Allmon3 at the page yourself, once:
+
+1. Make sure `Allmon3.Enable: true` and `Allmon3.WebRoot` are set correctly in this script's own config (`/etc/asl3-swp-ng-bridge/config.yaml`, default `WebRoot: /usr/share/allmon3`), and that it's run at least once (manually or via cron) so `swp-alerts.html` actually exists there.
+2. Edit `/etc/allmon3/allmon3.ini`:
+   ```sh
+   sudo nano /etc/allmon3/allmon3.ini
+   ```
+3. Find the stanza for the node where you want the panel to appear, and add `iframepre` (shows the panel above the transmit status line — recommended, since alerts are high-priority) or `iframepost` (shows it below the connection table instead):
+   ```ini
+   [501260]
+   host = 127.0.0.1
+   user = admin
+   pass = password
+   iframepre = swp-alerts.html
+   ```
+   Only add this to the stanza(s) for the node(s) actually covered by this alerting setup — not to a stanza for an unrelated node/location. The panel auto-collapses to zero height when there's nothing active, so it costs nothing to leave enabled.
+4. Reload the Allmon3 page in your browser — no Allmon3 service restart needed.
 
 ## Supermon setup
 
@@ -57,19 +73,16 @@ If `Weather.Enable: true`, the script reads a JSON file (default `/tmp/asl3-hera
 ```json
 {
   "weather": {
-    "temp_f": "82",
-    "temp_c": "27.8",
-    "humidity": "55",
-    "wind_mph": "8",
-    "wind_dir": "SW",
-    "wind_gust_mph": "14",
-    "condition": "Partly Cloudy"
+    "temp_f": 82,
+    "condition": "Partly Cloudy",
+    "feels_like_f": 85,
+    "humidity": 55
   },
   "weather_label": "My Station"
 }
 ```
 
-`wind_gust_mph` and `condition` may be omitted/null. Anything writing this file just needs to produce this shape.
+Deliberately just these four fields — matches what asl3-herald's own weather providers (Tempest, Open-Meteo, METAR) normalize down to internally for its own announcements, so it can write this snapshot straight from data it's already fetching, no wind/pressure/etc. tracked separately. `feels_like_f`/`condition` may be `null`. Anything writing this file just needs to produce this shape.
 
 ## File locations
 

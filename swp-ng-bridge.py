@@ -90,11 +90,9 @@ ALERTS_HTML = """\
       if(d.weather){
         var w=d.weather;
         var title='Weather conditions'+(d.weather_label?': '+d.weather_label:'');
-        var wind=w.wind_dir+' '+w.wind_mph+' mph';
-        if(w.wind_gust_mph) wind+=' (gust '+w.wind_gust_mph+' mph)';
-        var details='Temperature: '+w.temp_f+'&deg;F, '+w.temp_c+'&deg;C'+
-          ' &nbsp;|&nbsp; Humidity: '+w.humidity+'%'+
-          ' &nbsp;|&nbsp; Wind: '+wind;
+        var details='Temperature: '+w.temp_f+'&deg;F';
+        if(w.feels_like_f!=null && w.feels_like_f!=w.temp_f) details+=' (feels like '+w.feels_like_f+'&deg;F)';
+        if(w.humidity!=null) details+=' &nbsp;|&nbsp; Humidity: '+w.humidity+'%';
         if(w.condition) details+=' &nbsp;|&nbsp; '+w.condition;
         h+='<div class="swp-wx">'+
            '<div class="swp-wx-title">'+title+'</div>'+
@@ -168,11 +166,12 @@ def fetch_ng_alerts(api_base, timeout=10):
 def load_weather_snapshot(path, max_age_min):
     """Read the current-conditions JSON another program (e.g. asl3-herald)
     is expected to maintain. Expected shape:
-        {"weather": {"temp_f": ..., "temp_c": ..., "humidity": ...,
-                     "wind_mph": ..., "wind_dir": ..., "wind_gust_mph": ...,
-                     "condition": ...},
+        {"weather": {"temp_f": ..., "condition": ..., "feels_like_f": ...,
+                     "humidity": ...},
          "weather_label": "..."}
-    Returns None if missing, unreadable, or older than max_age_min."""
+    Matches asl3-herald's own internal weather-provider normalization (no
+    wind/pressure tracked). Returns None if missing, unreadable, or older
+    than max_age_min."""
     if not path or not os.path.isfile(path):
         return None
     try:
