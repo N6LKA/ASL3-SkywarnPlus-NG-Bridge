@@ -1,0 +1,32 @@
+# ASL3-SkywarnPlus-NG-Bridge configuration
+# Copy to /etc/asl3-swp-ng-bridge/config.yaml and edit — install.sh does this
+# for you automatically on first install (never overwrites an existing file).
+
+SkywarnPlusNG:
+  # SkywarnPlus-NG's local dashboard API. Leave as-is unless you changed its
+  # listen address/port — this does NOT need the base_path/reverse-proxy
+  # prefix, the API is always reachable unprefixed on the local port.
+  ApiBase: "http://127.0.0.1:8100"
+
+Allmon3:
+  Enable: false
+  # Allmon3's static web root (Apache Alias /allmon3 target).
+  WebRoot: /usr/share/allmon3
+
+Supermon:
+  Enable: false
+  # Classic (AUTOSKY-based) Supermon warning display paths. Both are written
+  # if writable; harmless if one doesn't exist on your system.
+  Paths:
+    - /tmp/AUTOSKY
+    - /var/www/html/AUTOSKY
+
+Weather:
+  # Merges a separately-maintained current-conditions snapshot into the
+  # Allmon3 panel only (Supermon's AUTOSKY display is alerts-only, same as
+  # before). This script does not fetch weather itself — point it at
+  # whatever writes that file (e.g. asl3-herald).
+  Enable: false
+  JsonPath: /tmp/asl3-herald/weather.json
+  # Snapshot older than this is treated as missing rather than shown stale.
+  MaxAgeMin: 30
