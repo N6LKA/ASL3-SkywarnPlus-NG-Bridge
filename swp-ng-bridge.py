@@ -77,6 +77,9 @@ ALERTS_HTML = """\
   <div id="swp"></div>
   <script>
     var SEV={extreme:'swp-extreme',severe:'swp-severe',moderate:'swp-moderate',minor:'swp-minor'};
+    function titleCase(s){
+      return s.replace(/\\w\\S*/g, function(t){return t.charAt(0).toUpperCase()+t.substr(1).toLowerCase();});
+    }
     function resizeParent(){
       try{
         var h=document.body.scrollHeight,fr=window.parent.document.querySelectorAll('iframe');
@@ -90,7 +93,8 @@ ALERTS_HTML = """\
       if(d.weather){
         var w=d.weather;
         var title='Weather conditions'+(d.weather_label?': '+d.weather_label:'');
-        var details='Temperature: '+w.temp_f+'&deg;F';
+        var tempC=Math.round((w.temp_f-32)*5/9);
+        var details='Temperature: '+w.temp_f+'&deg;F, '+tempC+'&deg;C';
         if(w.feels_like_f!=null && w.feels_like_f!=w.temp_f) details+=' (feels like '+w.feels_like_f+'&deg;F)';
         if(w.humidity!=null) details+=' &nbsp;|&nbsp; Humidity: '+w.humidity+'%';
         if(w.wind_mph!=null){
@@ -98,7 +102,7 @@ ALERTS_HTML = """\
           if(w.wind_gust_mph) wind+=' (gust '+w.wind_gust_mph+' mph)';
           details+=' &nbsp;|&nbsp; Wind: '+wind;
         }
-        if(w.condition) details+=' &nbsp;|&nbsp; '+w.condition;
+        if(w.condition) details+=' &nbsp;|&nbsp; '+titleCase(w.condition);
         h+='<div class="swp-wx">'+
            '<div class="swp-wx-title">'+title+'</div>'+
            '<div>'+details+'</div>'+
