@@ -288,7 +288,7 @@ def main():
     weather_cfg = cfg.get("Weather", {})
     if weather_cfg.get("Enable", False):
         weather = load_weather_snapshot(
-            weather_cfg.get("JsonPath", "/tmp/asl3-herald/weather.json"),
+            weather_cfg.get("JsonPath", "/etc/asterisk/scripts/asl3-herald/weather.json"),
             weather_cfg.get("MaxAgeMin", 30),
         )
 
