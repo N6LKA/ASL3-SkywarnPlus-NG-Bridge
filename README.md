@@ -68,7 +68,7 @@ Writes `warnings.txt` to `/tmp/AUTOSKY` and `/var/www/html/AUTOSKY` (both, if wr
 
 ## Weather snapshot contract
 
-If `Weather.Enable: true`, the script reads a JSON file (default `/tmp/asl3-herald/weather.json`) and merges it into the Allmon3 panel only (Supermon's AUTOSKY display stays alerts-only). It's ignored if missing or older than `Weather.MaxAgeMin`. Expected shape:
+If `Weather.Enable: true`, the script reads a JSON file (default `/etc/asterisk/scripts/asl3-herald/weather.json`) and merges it into the Allmon3 panel only (Supermon's AUTOSKY display stays alerts-only). It's ignored if missing or older than `Weather.MaxAgeMin`. Expected shape:
 
 ```json
 {

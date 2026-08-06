@@ -26,7 +26,13 @@ Weather:
   # Allmon3 panel only (Supermon's AUTOSKY display is alerts-only, same as
   # before). This script does not fetch weather itself — point it at
   # whatever writes that file (e.g. asl3-herald).
+  #
+  # Deliberately not under /tmp, same reasoning as the AUTOSKY Paths above
+  # using /var/www/html/AUTOSKY: Debian/Ubuntu's default apache2.service
+  # sets PrivateTmp=true, so anything Apache exec()s or reads directly (e.g.
+  # Supermon's own weather-line script) gets an isolated /tmp and can't see
+  # a file written to the real /tmp by a separate service/cron job.
   Enable: false
-  JsonPath: /tmp/asl3-herald/weather.json
+  JsonPath: /etc/asterisk/scripts/asl3-herald/weather.json
   # Snapshot older than this is treated as missing rather than shown stale.
   MaxAgeMin: 30

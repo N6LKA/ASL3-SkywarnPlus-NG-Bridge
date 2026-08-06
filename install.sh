@@ -40,20 +40,23 @@ else
 
     ALLMON3_ENABLE="false"
     SUPERMON_ENABLE="false"
+    WEATHER_ENABLE="false"
     if [[ -r /dev/tty ]]; then
         read -r -p "    Enable Allmon3 integration? [y/N]: " ans < /dev/tty || true
         [[ "${ans,,}" == "y" || "${ans,,}" == "yes" ]] && ALLMON3_ENABLE="true"
         read -r -p "    Enable Supermon integration? [y/N]: " ans < /dev/tty || true
         [[ "${ans,,}" == "y" || "${ans,,}" == "yes" ]] && SUPERMON_ENABLE="true"
+        read -r -p "    Merge in a weather snapshot (e.g. from asl3-herald) on the Allmon3 panel? [y/N]: " ans < /dev/tty || true
+        [[ "${ans,,}" == "y" || "${ans,,}" == "yes" ]] && WEATHER_ENABLE="true"
     else
-        echo "    No TTY available to prompt — leaving Allmon3/Supermon disabled (enable them in ${CONFIG_FILE} manually)."
+        echo "    No TTY available to prompt — leaving Allmon3/Supermon/Weather disabled (enable them in ${CONFIG_FILE} manually)."
     fi
 
-    python3 - "${CONFIG_FILE}" "${ALLMON3_ENABLE}" "${SUPERMON_ENABLE}" <<'PYEOF'
+    python3 - "${CONFIG_FILE}" "${ALLMON3_ENABLE}" "${SUPERMON_ENABLE}" "${WEATHER_ENABLE}" <<'PYEOF'
 import sys
 from ruamel.yaml import YAML
 
-path, allmon3_enable, supermon_enable = sys.argv[1], sys.argv[2], sys.argv[3]
+path, allmon3_enable, supermon_enable, weather_enable = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 yaml = YAML()
 yaml.preserve_quotes = True
 with open(path) as f:
@@ -61,12 +64,13 @@ with open(path) as f:
 
 cfg.setdefault("Allmon3", {})["Enable"] = (allmon3_enable == "true")
 cfg.setdefault("Supermon", {})["Enable"] = (supermon_enable == "true")
+cfg.setdefault("Weather", {})["Enable"] = (weather_enable == "true")
 
 with open(path, "w") as f:
     yaml.dump(cfg, f)
 PYEOF
 
-    echo "    Wrote config to ${CONFIG_FILE} (Allmon3.Enable=${ALLMON3_ENABLE}, Supermon.Enable=${SUPERMON_ENABLE})"
+    echo "    Wrote config to ${CONFIG_FILE} (Allmon3.Enable=${ALLMON3_ENABLE}, Supermon.Enable=${SUPERMON_ENABLE}, Weather.Enable=${WEATHER_ENABLE})"
 fi
 
 echo "==> Installing cron job (runs every minute)"
