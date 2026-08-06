@@ -73,6 +73,33 @@ PYEOF
     echo "    Wrote config to ${CONFIG_FILE} (Allmon3.Enable=${ALLMON3_ENABLE}, Supermon.Enable=${SUPERMON_ENABLE}, Weather.Enable=${WEATHER_ENABLE})"
 fi
 
+# Migrate anyone still on the pre-fix /tmp-based weather snapshot default —
+# that path is invisible to anything Apache exec()s when PrivateTmp=true
+# (Debian/Ubuntu's apache2.service default), which silently broke Supermon's
+# weather-line integration on the asl3-herald side. Only touches the file
+# if JsonPath is still the exact old default; never touches a value the
+# user deliberately customized to something else.
+python3 - "${CONFIG_FILE}" <<'PYEOF'
+import sys
+from ruamel.yaml import YAML
+
+path = sys.argv[1]
+OLD = "/tmp/asl3-herald/weather.json"
+NEW = "/etc/asterisk/scripts/asl3-herald/weather.json"
+
+yaml = YAML()
+yaml.preserve_quotes = True
+with open(path) as f:
+    cfg = yaml.load(f)
+
+weather = cfg.get("Weather") or {}
+if weather.get("JsonPath") == OLD:
+    weather["JsonPath"] = NEW
+    with open(path, "w") as f:
+        yaml.dump(cfg, f)
+    print(f"    Migrated Weather.JsonPath off /tmp (PrivateTmp compatibility): {OLD} -> {NEW}")
+PYEOF
+
 echo "==> Installing cron job (runs every minute)"
 cat > "${CRON_FILE}" <<EOF
 * * * * * root ${BIN_PATH} >> /var/log/asl3-swp-ng-bridge.log 2>&1
