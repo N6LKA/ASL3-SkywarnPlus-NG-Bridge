@@ -46,7 +46,7 @@ else
         [[ "${ans,,}" == "y" || "${ans,,}" == "yes" ]] && ALLMON3_ENABLE="true"
         read -r -p "    Enable Supermon integration? [y/N]: " ans < /dev/tty || true
         [[ "${ans,,}" == "y" || "${ans,,}" == "yes" ]] && SUPERMON_ENABLE="true"
-        read -r -p "    Merge in a weather snapshot (e.g. from asl3-herald) on the Allmon3 panel? [y/N]: " ans < /dev/tty || true
+        read -r -p "    Merge in a weather snapshot (e.g. from Herald) on the Allmon3 panel? [y/N]: " ans < /dev/tty || true
         [[ "${ans,,}" == "y" || "${ans,,}" == "yes" ]] && WEATHER_ENABLE="true"
     else
         echo "    No TTY available to prompt — leaving Allmon3/Supermon/Weather disabled (enable them in ${CONFIG_FILE} manually)."
@@ -73,19 +73,25 @@ PYEOF
     echo "    Wrote config to ${CONFIG_FILE} (Allmon3.Enable=${ALLMON3_ENABLE}, Supermon.Enable=${SUPERMON_ENABLE}, Weather.Enable=${WEATHER_ENABLE})"
 fi
 
-# Migrate anyone still on the pre-fix /tmp-based weather snapshot default —
-# that path is invisible to anything Apache exec()s when PrivateTmp=true
-# (Debian/Ubuntu's apache2.service default), which silently broke Supermon's
-# weather-line integration on the asl3-herald side. Only touches the file
-# if JsonPath is still the exact old default; never touches a value the
-# user deliberately customized to something else.
+# Migrate anyone still on an old JsonPath default — either the pre-fix
+# /tmp-based one (invisible to anything Apache exec()s when PrivateTmp=true,
+# which silently broke Supermon's weather-line integration) or the
+# pre-Herald-rename asl3-herald directory name (Herald's own install.sh
+# moved its config/state to /etc/asterisk/scripts/herald/ as of v1.26.0,
+# so a JsonPath still pointing at the old asl3-herald directory silently
+# stops finding fresh weather data). Only touches the file if JsonPath is
+# still one of these exact old defaults; never touches a value the user
+# deliberately customized to something else.
 python3 - "${CONFIG_FILE}" <<'PYEOF'
 import sys
 from ruamel.yaml import YAML
 
 path = sys.argv[1]
-OLD = "/tmp/asl3-herald/weather.json"
-NEW = "/etc/asterisk/scripts/asl3-herald/weather.json"
+OLD_CANDIDATES = [
+    "/tmp/asl3-herald/weather.json",
+    "/etc/asterisk/scripts/asl3-herald/weather.json",
+]
+NEW = "/etc/asterisk/scripts/herald/weather.json"
 
 yaml = YAML()
 yaml.preserve_quotes = True
@@ -93,11 +99,12 @@ with open(path) as f:
     cfg = yaml.load(f)
 
 weather = cfg.get("Weather") or {}
-if weather.get("JsonPath") == OLD:
+old = weather.get("JsonPath")
+if old in OLD_CANDIDATES:
     weather["JsonPath"] = NEW
     with open(path, "w") as f:
         yaml.dump(cfg, f)
-    print(f"    Migrated Weather.JsonPath off /tmp (PrivateTmp compatibility): {OLD} -> {NEW}")
+    print(f"    Migrated Weather.JsonPath: {old} -> {NEW}")
 PYEOF
 
 echo "==> Installing cron job (runs every minute)"
