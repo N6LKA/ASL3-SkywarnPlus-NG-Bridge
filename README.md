@@ -2,7 +2,7 @@
 
 Relays active weather alerts from a locally running [SkywarnPlus-NG](https://github.com/hardenedpenguin/SkywarnPlus-NG) into the legacy Allmon3 iframe panel and classic (AUTOSKY) Supermon warning display — integrations NG doesn't provide natively.
 
-Optionally merges in a current-conditions weather snapshot (written by something else, e.g. [asl3-herald](https://github.com/N6LKA/ASL3-Herald)) for the Allmon3 panel. This script does not fetch weather itself — see [Weather snapshot contract](#weather-snapshot-contract) below.
+Optionally merges in a current-conditions weather snapshot (written by something else, e.g. [Herald](https://github.com/N6LKA/AllStar-Herald)) for the Allmon3 panel. This script does not fetch weather itself — see [Weather snapshot contract](#weather-snapshot-contract) below.
 
 ## Why this exists
 
@@ -68,7 +68,7 @@ Writes `warnings.txt` to `/tmp/AUTOSKY` and `/var/www/html/AUTOSKY` (both, if wr
 
 ## Weather snapshot contract
 
-If `Weather.Enable: true`, the script reads a JSON file (default `/etc/asterisk/scripts/asl3-herald/weather.json`) and merges it into the Allmon3 panel only (Supermon's AUTOSKY display stays alerts-only). It's ignored if missing or older than `Weather.MaxAgeMin`. Expected shape:
+If `Weather.Enable: true`, the script reads a JSON file (default `/etc/asterisk/scripts/herald/weather.json`) and merges it into the Allmon3 panel only (Supermon's AUTOSKY display stays alerts-only). It's ignored if missing or older than `Weather.MaxAgeMin`. Expected shape:
 
 ```json
 {
@@ -85,7 +85,7 @@ If `Weather.Enable: true`, the script reads a JSON file (default `/etc/asterisk/
 }
 ```
 
-Matches asl3-herald's own weather-provider normalization (Tempest, Open-Meteo, METAR all return this shape), so it can write this snapshot straight from data it's already fetching for its own announcements. `feels_like_f`/`condition`/`wind_dir`/`wind_gust_mph` may be `null` (e.g. METAR reports don't include `feels_like_f`). Anything writing this file just needs to produce this shape.
+Matches Herald's own weather-provider normalization (Tempest, Open-Meteo, METAR all return this shape), so it can write this snapshot straight from data it's already fetching for its own announcements. `feels_like_f`/`condition`/`wind_dir`/`wind_gust_mph` may be `null` (e.g. METAR reports don't include `feels_like_f`). Anything writing this file just needs to produce this shape.
 
 ## File locations
 

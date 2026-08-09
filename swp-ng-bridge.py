@@ -9,8 +9,8 @@ iframe panel and classic (AUTOSKY) Supermon warning display, since NG itself
 has no built-in integration for either.
 
 Optionally merges in a separately-maintained current-conditions weather
-snapshot (e.g. written by asl3-herald) for the Allmon3 panel — this script
-does not fetch weather itself.
+snapshot (e.g. written by Herald, formerly asl3-herald) for the Allmon3
+panel — this script does not fetch weather itself.
 
 Run as root via cron (SkywarnPlus-NG's alert data is fetched over its local
 HTTP API, but Allmon3's web root and Supermon's AUTOSKY paths are not
@@ -173,13 +173,13 @@ def fetch_ng_alerts(api_base, timeout=10):
 
 
 def load_weather_snapshot(path, max_age_min):
-    """Read the current-conditions JSON another program (e.g. asl3-herald)
+    """Read the current-conditions JSON another program (e.g. Herald)
     is expected to maintain. Expected shape:
         {"weather": {"temp_f": ..., "condition": ..., "feels_like_f": ...,
                      "humidity": ..., "wind_mph": ..., "wind_dir": ...,
                      "wind_gust_mph": ...},
          "weather_label": "..."}
-    Matches asl3-herald's own weather-provider normalization (Tempest,
+    Matches Herald's own weather-provider normalization (Tempest,
     Open-Meteo, METAR). Returns None if missing, unreadable, or older than
     max_age_min."""
     if not path or not os.path.isfile(path):
@@ -288,7 +288,7 @@ def main():
     weather_cfg = cfg.get("Weather", {})
     if weather_cfg.get("Enable", False):
         weather = load_weather_snapshot(
-            weather_cfg.get("JsonPath", "/etc/asterisk/scripts/asl3-herald/weather.json"),
+            weather_cfg.get("JsonPath", "/etc/asterisk/scripts/herald/weather.json"),
             weather_cfg.get("MaxAgeMin", 30),
         )
 
